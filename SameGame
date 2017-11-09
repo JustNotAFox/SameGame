@@ -86,8 +86,8 @@ class App(tk.Tk):
         
     def get_cellValue(self, row, column):
     # Get the value associated with a cell and return it
-    value = self.canvas.itemcget(self.grid[row, column], 'text')
-    return value
+        value = self.canvas.itemcget(self.grid[row, column], 'text')
+        return value
 
     def delete_cell(self, row, column):
         # Delete a cell, will delete both colored rectangle and the text/number associated
