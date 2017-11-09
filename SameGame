@@ -1,0 +1,128 @@
+import time
+import tkinter as tk
+from random import randint
+
+#########################################
+######                             ######
+######    Game parameters:         ######
+######                             ######
+#########################################
+
+# Number of Rows
+g_height = 12
+
+# Number of Columns
+g_width = 16
+
+# dictionary for colors and their numbers as keys
+color_values = {'1': 'Red', '2': 'Blue', '3': 'Green'}
+
+#########################################
+######                             ######
+######    Algorithm parameters:    ######
+######                             ######
+#########################################
+
+# probability that an individual will mutate
+k_mut_prob = 0.6
+
+# Number of generations to run for
+k_n_generations = 100
+
+# Population size of 1 generation (RoutePop)
+k_population_size = 100
+
+class App(tk.Tk):
+    """
+    Runs the application
+    """
+
+    def __init__(self, n_generations, pop_size):
+        '''
+        Initiates an App object to run for n_generations with a population of size pop_size
+        '''
+        self.n_generations = n_generations
+        self.pop_size = pop_size
+
+        # Initiates a window object & sets its title
+        self.window = tk.Tk()
+        self.window.geometry('{}x{}'.format(500, 450))
+        self.window.wm_title("SameGame - Genetic Algorithm")
+
+        # initiates a canvas for displaying the SameGame
+        self.canvas = tk.Canvas(self.window, height=301, width=401, highlightthickness=0, borderwidth=0)
+
+        # Initiates a label
+        self.canvas_title = tk.Label(self.window, text="SameGame")
+
+        # Initiates a status bar to keep track of current score
+        # self.stat_tk_txt = StringVar()
+        # self.status_label = Label(self.window, textvariable=self.stat_tk_txt, relief=SUNKEN, anchor=W)
+
+        #Initiate buttons for generating a random new SameGame and for starting the GA
+        self.start_btn = tk.Button(self.window, text="Start GA", command=lambda: self.GA_loop())
+        self.start_btn.pack(side=tk.BOTTOM)
+        self.generate_btn = tk.Button(self.window, text="Generate New", command=lambda: self.draw_SameGame())
+        self.generate_btn.pack(side=tk.BOTTOM)
+
+        # Packs all the widgets (physically creates them and places them in order)
+        self.canvas_title.pack()
+        self.canvas.pack()
+        #self.status_label.pack(side=BOTTOM, fill=X)
+
+        # Initialize GUI constants
+        self.rows = g_height
+        self.columns = g_width
+        self.cellwidth = 25
+        self.cellheight = 25
+        self.textoffset = 15
+        self.rect = {}
+        self.grid = {}
+
+        self.draw_SameGame()
+
+    def GA_loop(self):
+        nothing = 0
+
+    def delete_cell(self, row, column):
+        # Delete a cell, will delete both colored rectangle and the text/number associated
+        self.canvas.delete(self.canvas.find_withtag(self.rect[row, column]))
+        self.canvas.delete(self.canvas.find_withtag(self.grid[row, column]))
+
+    def draw_SameGame(self, redraw=False):
+        # Clears the canvas of previous elements
+        self.canvas.delete("all")
+
+        for column in range(g_width):
+            for row in range(g_height):
+                x1 = column * self.cellwidth
+                y1 = row * self.cellheight
+                x2 = x1 + self.cellwidth
+                y2 = y1 + self.cellheight
+                textNum = randint(1, 3)
+                cellColor = color_values[str(textNum)]
+                self.rect[row, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
+                self.grid[row, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags = textNum)
+
+    def update_canvas(self, delay):
+        '''
+        Convenience method to update the canvases after a move is performed
+        '''
+        self.canvas.itemconfig("rect", fill="white")
+
+    def window_loop(self):
+        '''
+        Used to wraps the GA_loop() method and initiates the window on top of the logic.
+        window.mainloop() hogs the Thread, that's why the GA_loop needs to be called as a callback
+        '''
+
+        self.window.mainloop()
+
+if __name__ == '__main__':
+    try:
+        start_time = time.time()
+        app = App(n_generations=k_n_generations, pop_size=k_population_size)
+        app.window_loop()
+
+    except Exception as e:
+        print("\n[ERROR]: %s\n" % e)
