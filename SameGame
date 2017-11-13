@@ -69,7 +69,7 @@ class App(tk.Tk):
         self.average_label = tk.Label(self.window, textvariable=self.average_tk_txt, relief=tk.SUNKEN, anchor=tk.W)
 
         #Initiate buttons for generating a random new SameGame and for starting the GA
-        self.start_btn = tk.Button(self.window, text="Start GA", command=lambda: self.update_canvas())
+        self.start_btn = tk.Button(self.window, text="Start GA", command=lambda: self.GA_loop())
         self.start_btn.pack(side=tk.BOTTOM)
         self.generate_btn = tk.Button(self.window, text="Generate New", command=lambda: self.draw_SameGame())
         self.generate_btn.pack(side=tk.BOTTOM)
