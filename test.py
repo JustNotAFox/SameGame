@@ -170,7 +170,7 @@ while True:
     f.write(str(c) + ',')
     s = solve(g,[1,0,0,0,0])
     s2 = solve(g,[1,0,1,0,0])
-    f.write(str(s["score"]) + ',' + str(s2["score"]))
+    f.write(str(s["score"]) + ',' + str(s2["score"]) + ',')
     time = datetime.datetime.now()
     i = genetic(g)
     f.write(str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(datetime.datetime.now() - time) + ',')
