@@ -176,7 +176,6 @@ while True:
     f.write(str(s["score"]) + ',' + str(s2["score"]))
     time = datetime.datetime.now()
     i = genetic(g)
-    f = open('out.csv', 'a')
     f.write(str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(datetime.datetime.now() - time) + ',')
     time = datetime.datetime.now()
     i = sorted(i,key=lambda x:x["fitness"],reverse=True)
