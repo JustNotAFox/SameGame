@@ -115,8 +115,9 @@ def postMove(g,m):
     for x in range(16):
         for y in range(12):
             if (x,y) not in m:
-                g[(outx,outy)] = g[(x,y)]
-                outy += 1
+                if g[(x,y)] > 0:
+                    g[(outx,outy)] = g[(x,y)]
+                    outy += 1
         if outy > 0:
             for z in range(outy,12):
                 g[(outx,z)] = 0
