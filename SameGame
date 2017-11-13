@@ -55,9 +55,16 @@ class App(tk.Tk):
         # Initiates a label
         self.canvas_title = tk.Label(self.window, text="SameGame")
 
-        # Initiates a status bar to keep track of current score
-        # self.stat_tk_txt = StringVar()
-        # self.status_label = Label(self.window, textvariable=self.stat_tk_txt, relief=SUNKEN, anchor=W)
+        # Initiates status bars to keep track of best, worst, and average scores
+        self.best_tk_txt = tk.StringVar()
+        self.best_tk_txt.set("Best Score:")
+        self.best_label = tk.Label(self.window, textvariable=self.best_tk_txt, relief=tk.SUNKEN, anchor=tk.W)
+        self.worst_tk_txt = tk.StringVar()
+        self.worst_tk_txt.set("Worst Score:")
+        self.worst_label = tk.Label(self.window, textvariable=self.worst_tk_txt, relief=tk.SUNKEN, anchor=tk.W)
+        self.average_tk_txt = tk.StringVar()
+        self.average_tk_txt.set("Average Score:")
+        self.average_label = tk.Label(self.window, textvariable=self.average_tk_txt, relief=tk.SUNKEN, anchor=tk.W)
 
         #Initiate buttons for generating a random new SameGame and for starting the GA
         self.start_btn = tk.Button(self.window, text="Start GA", command=lambda: self.GA_loop())
@@ -66,9 +73,12 @@ class App(tk.Tk):
         self.generate_btn.pack(side=tk.BOTTOM)
 
         # Packs all the widgets (physically creates them and places them in order)
+
         self.canvas_title.pack()
+        self.best_label.pack(side=tk.BOTTOM, fill=tk.X)
+        self.worst_label.pack(side=tk.BOTTOM, fill=tk.X)
+        self.average_label.pack(side=tk.BOTTOM, fill=tk.X)
         self.canvas.pack()
-        #self.status_label.pack(side=BOTTOM, fill=X)
 
         # Initialize GUI constants
         self.rows = g_height
@@ -76,6 +86,8 @@ class App(tk.Tk):
         self.cellwidth = 25
         self.cellheight = 25
         self.textoffset = 15
+
+        #Initialize dictionaries for cell rectangles and numbers
         self.rect = {}
         self.grid = {}
 
@@ -83,21 +95,38 @@ class App(tk.Tk):
 
     def GA_loop(self):
         nothing = 0
-        
+
     def get_cellValue(self, row, column):
-    # Get the value associated with a cell and return it
+        # Get the value associated with a cell and return it
         value = self.canvas.itemcget(self.grid[row, column], 'text')
         return value
+
+    def none_below(self, row, column):
+        # Returns true if there are no cells below the input cell
+        if row != g_height and row+1 != g_height and self.grid[row+1, column] is None:
+            return True
+
+    def column_isEmpty(self, column):
+        # Returns true if input column is empty
+        for row in range(g_height):
+            if self.grid[row, column] is None:
+                print("1")
+            else:
+                return False
+        return True
 
     def delete_cell(self, row, column):
         # Delete a cell, will delete both colored rectangle and the text/number associated
         self.canvas.delete(self.canvas.find_withtag(self.rect[row, column]))
         self.canvas.delete(self.canvas.find_withtag(self.grid[row, column]))
+        self.rect[row, column] = None
+        self.grid[row, column] = None
 
-    def draw_SameGame(self, redraw=False):
+    def draw_SameGame(self):
         # Clears the canvas of previous elements
         self.canvas.delete("all")
 
+        # Draws the board
         for column in range(g_width):
             for row in range(g_height):
                 x1 = column * self.cellwidth
@@ -107,13 +136,73 @@ class App(tk.Tk):
                 textNum = randint(1, 3)
                 cellColor = color_values[str(textNum)]
                 self.rect[row, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
-                self.grid[row, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags = textNum)
+                self.grid[row, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum,tags = textNum)
 
-    def update_canvas(self, delay):
+        #Uncomment to test column collapse
+        # for row in range(0, g_height):
+        #     self.delete_cell(row, 5)
+        # self.update_canvas()
+
+        # Uncomment to test cell drops
+        # self.delete_cell(3, 5)
+        # self.delete_cell(2, 5)
+        # self.delete_cell(1, 5)
+        # self.delete_cell(10, 10)
+        # self.delete_cell(5, 15)
+        # self.update_canvas()
+
+
+    def drop_cells(self):
+        # Drops cells down if there are empty spaces
+        for column in range(g_width):
+            for row in range(g_height):
+                while(self.none_below(row, column) and self.grid[row,column] is not None):
+                    x1 = column * self.cellwidth
+                    y1 = (row+1) * self.cellheight
+                    x2 = x1 + self.cellwidth
+                    y2 = y1 + (self.cellheight)
+                    textNum = self.get_cellValue(row, column)
+                    cellColor = color_values[str(textNum)]
+                    self.rect[row+1, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
+                    self.grid[row+1, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
+                    self.delete_cell(row, column)
+                    break
+
+    def collapse_columns(self):
+        #Finds the empty column
+        empty_column = None
+        for column in range(g_width):
+            if self.column_isEmpty(column):
+                empty_column = column
+                break
+        print("empty column is", empty_column)
+        if empty_column is None:
+            return
+
+        #Shifts the other columns
+        for column in range(empty_column+1, g_width):
+            for row in range(g_height):
+                x1 = (column-1) * self.cellwidth
+                y1 = row * self.cellheight
+                x2 = x1 + self.cellwidth
+                y2 = y1 + self.cellheight
+                textNum = self.get_cellValue(row, column)
+                cellColor = color_values[str(textNum)]
+                self.rect[row, column-1] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
+                self.grid[row, column-1] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
+                self.delete_cell(row, column)
+
+    def update_canvas(self):
         '''
         Convenience method to update the canvases after a move is performed
         '''
-        self.canvas.itemconfig("rect", fill="white")
+        # Iterate through board and drop cells if any of them need to be dropped
+        for column in range(g_width):
+            for row in range(g_height):
+                self.drop_cells()
+
+        # Shifts columns over if a column is empty
+        self.collapse_columns()
 
     def window_loop(self):
         '''
