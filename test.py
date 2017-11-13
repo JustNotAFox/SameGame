@@ -172,10 +172,10 @@ while True:
     g = genBoard(1,1)
     i = genetic(g)
     f = open('out.csv', 'a')
-    f.write(str(c) + ',' +  str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(time-datetime.datetime.now()) + ',')
+    f.write(str(c) + ',' +  str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(datetime.datetime.now() - time) + ',')
     time = datetime.datetime.now()
     i = sorted(i,key=lambda x:x["fitness"],reverse=True)
     t = woc(g, [t["heur"] for t in i[:5]])
-    f.write(str(t) + ',' + str(time-datetime.datetime.now()) + '\n')
+    f.write(str(t) + ',' + str(datetime.datetime.now() - time) + '\n')
     f.close()
     c += 1
