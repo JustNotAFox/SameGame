@@ -12,15 +12,12 @@ def genetic(g):
     for i in pop:
         i["fitness"] = solve(g,i["heur"])["score"]
     for i in range(100):
-        z = max(pop,key=lambda t: t["fitness"])
-        x = random.randint(0,19)
-        while pop[x]["heur"] == z["heur"]:
-            x = random.randint(0, 19)
+        pop = sorted(pop,key=lambda x:x["fitness"],reverse=True)
+        x = random.randint(1,19)
         pop[x]["heur"] = mutate(pop[x]["heur"])
         pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
-        x = random.randint(0,19)
-        while pop[x]["heur"] == z["heur"]:
-            x = random.randint(0, 19)
+        pop = sorted(pop,key=lambda x:x["fitness"],reverse=True)
+        x = random.randint(1,19)
         y = random.randint(0,19)
         pop[x]["heur"] = breed(pop[y]["heur"],z["heur"])
         pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
