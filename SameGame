@@ -1,5 +1,7 @@
 import time
 import tkinter as tk
+import GA
+
 from random import randint
 
 #########################################
@@ -94,7 +96,8 @@ class App(tk.Tk):
         self.draw_SameGame()
 
     def GA_loop(self):
-        nothing = 0
+        g = GA.genBoard(1, 1)
+        print(g)
 
     def get_cellValue(self, row, column):
         # Get the value associated with a cell and return it
@@ -103,17 +106,18 @@ class App(tk.Tk):
 
     def none_below(self, row, column):
         # Returns true if there are no cells below the input cell
-        if row != g_height and row+1 != g_height and self.grid[row+1, column] is None:
+        if (row - 1) >= 0 and self.grid[row-1, column] is None:
             return True
+        else:
+            return False
 
     def column_isEmpty(self, column):
         # Returns true if input column is empty
         for row in range(g_height):
             if self.grid[row, column] is None:
-                print("1")
+                return True
             else:
                 return False
-        return True
 
     def delete_cell(self, row, column):
         # Delete a cell, will delete both colored rectangle and the text/number associated
@@ -130,7 +134,7 @@ class App(tk.Tk):
         for column in range(g_width):
             for row in range(g_height):
                 x1 = column * self.cellwidth
-                y1 = row * self.cellheight
+                y1 = (self.rows - row - 1) * self.cellheight
                 x2 = x1 + self.cellwidth
                 y2 = y1 + self.cellheight
                 textNum = randint(1, 3)
@@ -141,15 +145,15 @@ class App(tk.Tk):
         #Uncomment to test column collapse
         # for row in range(0, g_height):
         #     self.delete_cell(row, 5)
-        # self.update_canvas()
+        #     self.delete_cell(row, 6)
+        #     self.delete_cell(row, 7)
 
-        # Uncomment to test cell drops
+        #Uncomment to test cell drops
         # self.delete_cell(3, 5)
         # self.delete_cell(2, 5)
         # self.delete_cell(1, 5)
         # self.delete_cell(10, 10)
         # self.delete_cell(5, 15)
-        # self.update_canvas()
 
 
     def drop_cells(self):
@@ -157,52 +161,55 @@ class App(tk.Tk):
         for column in range(g_width):
             for row in range(g_height):
                 while(self.none_below(row, column) and self.grid[row,column] is not None):
-                    x1 = column * self.cellwidth
-                    y1 = (row+1) * self.cellheight
+                    print(row, column)
+                    x1 = (column) * self.cellwidth
+                    y1 = (self.rows - row) * self.cellheight
                     x2 = x1 + self.cellwidth
                     y2 = y1 + (self.cellheight)
                     textNum = self.get_cellValue(row, column)
                     cellColor = color_values[str(textNum)]
-                    self.rect[row+1, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
-                    self.grid[row+1, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
+                    self.rect[row-1, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
+                    self.grid[row-1, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
                     self.delete_cell(row, column)
                     break
 
     def collapse_columns(self):
-        #Finds the empty column
-        empty_column = None
+        # Finds the empty column
+        empty_columns = []
         for column in range(g_width):
             if self.column_isEmpty(column):
-                empty_column = column
-                break
-        print("empty column is", empty_column)
-        if empty_column is None:
+                empty_columns.append(column)
+        if empty_columns is None:
             return
 
-        #Shifts the other columns
-        for column in range(empty_column+1, g_width):
+        # Shifts the other columns
+        for column in range(empty_columns.pop() + 1, g_width):
             for row in range(g_height):
-                x1 = (column-1) * self.cellwidth
-                y1 = row * self.cellheight
+                x1 = (column - len(empty_columns) - 1) * self.cellwidth
+                y1 = (self.rows - row - 1) * self.cellheight
                 x2 = x1 + self.cellwidth
                 y2 = y1 + self.cellheight
                 textNum = self.get_cellValue(row, column)
                 cellColor = color_values[str(textNum)]
-                self.rect[row, column-1] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
-                self.grid[row, column-1] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
+                self.rect[row, column - 1] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor,
+                                                                          tags=(row, column))
+                self.grid[row, column - 1] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset,
+                                                                     fill="black", text=textNum, tags=textNum)
                 self.delete_cell(row, column)
 
     def update_canvas(self):
         '''
         Convenience method to update the canvases after a move is performed
         '''
+        # Shifts columns over if a column is empty
+        self.collapse_columns()
+
         # Iterate through board and drop cells if any of them need to be dropped
         for column in range(g_width):
             for row in range(g_height):
                 self.drop_cells()
 
-        # Shifts columns over if a column is empty
-        self.collapse_columns()
+
 
     def window_loop(self):
         '''
