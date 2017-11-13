@@ -24,11 +24,11 @@ def genetic(g):
         y = random.randint(0,19)
         pop[x]["heur"] = breed(pop[y]["heur"],z["heur"])
         pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
-
     return pop
 
 def mutate(h):
     h[random.randint(0,4)] = random.random()
+    return h
 
 def breed(h,h2):
     r = []
@@ -162,13 +162,20 @@ def solve(g,h):
         g = a["after"]
     return r
 
-f = open('out.csv', 'w')
-f.write("Run,Best,Worst,WOC,Time\n")
+f = open('out.csv', 'a')
+f.write("Run,Best,Worst,Time,WOC,WOC Time\n")
+f.close()
 c = 1
 while True:
+    print(c)
     time = datetime.datetime.now()
     g = genBoard(1,1)
     i = genetic(g)
-    i = sorted(i,key=lambda x:x["score"],reverse=True)
+    f = open('out.csv', 'a')
+    f.write(str(c) + ',' +  str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(time-datetime.datetime.now()) + ',')
+    time = datetime.datetime.now()
+    i = sorted(i,key=lambda x:x["fitness"],reverse=True)
     t = woc(g, [t["heur"] for t in i[:5]])
-    f.write(str(c) + ',' +  str(i[0]["score"]) + ',' + str(i[len(i) - 1]["score"]) + ',' + str(t,time-datetime.datetime.now()) + '\n')
+    f.write(str(t) + ',' + str(time-datetime.datetime.now()) + '\n')
+    f.close()
+    c += 1
