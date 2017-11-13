@@ -69,7 +69,7 @@ class App(tk.Tk):
         self.average_label = tk.Label(self.window, textvariable=self.average_tk_txt, relief=tk.SUNKEN, anchor=tk.W)
 
         #Initiate buttons for generating a random new SameGame and for starting the GA
-        self.start_btn = tk.Button(self.window, text="Start GA", command=lambda: self.GA_loop())
+        self.start_btn = tk.Button(self.window, text="Start GA", command=lambda: self.update_canvas())
         self.start_btn.pack(side=tk.BOTTOM)
         self.generate_btn = tk.Button(self.window, text="Generate New", command=lambda: self.draw_SameGame())
         self.generate_btn.pack(side=tk.BOTTOM)
@@ -146,6 +146,7 @@ class App(tk.Tk):
         # for row in range(0, g_height):
         #     self.delete_cell(row, 5)
         #     self.delete_cell(row, 6)
+        #     self.delete_cell(row, 7)
 
         #Uncomment to test cell drops
         # self.delete_cell(3, 5)
@@ -174,19 +175,17 @@ class App(tk.Tk):
 
     def collapse_columns(self):
         # Finds the empty column
-        empty_column = None
+        empty_columns = []
         for column in range(g_width):
             if self.column_isEmpty(column):
-                empty_column = column
-                break
-        print("empty column is", empty_column)
-        if empty_column is None:
+                empty_columns.append(column)
+        if empty_columns is None:
             return
 
         # Shifts the other columns
-        for column in range(empty_column + 1, g_width):
+        for column in range(empty_columns.pop() + 1, g_width):
             for row in range(g_height):
-                x1 = (column - 1) * self.cellwidth
+                x1 = (column - len(empty_columns) - 1) * self.cellwidth
                 y1 = (self.rows - row - 1) * self.cellheight
                 x2 = x1 + self.cellwidth
                 y2 = y1 + self.cellheight
@@ -209,6 +208,8 @@ class App(tk.Tk):
         for column in range(g_width):
             for row in range(g_height):
                 self.drop_cells()
+
+
 
     def window_loop(self):
         '''
