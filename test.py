@@ -163,16 +163,21 @@ def solve(g,h):
     return r
 
 f = open('out.csv', 'a')
-f.write("Run,Best,Worst,Time,WOC,WOC Time\n")
+f.write("Run,Greedy (Move Score),Greedy (Move Score + Potential Move Score),Best,Worst,Time,WOC,WOC Time\n")
 f.close()
 c = 1
 while True:
     print(c)
-    time = datetime.datetime.now()
     g = genBoard(1,1)
+    f = open('out.csv', 'a')
+    f.write(str(c) + ',')
+    s = solve(g,[1,0,0,0,0])
+    s2 = solve(g,[1,0,1,0,0])
+    f.write(str(s["score"]) + ',' + str(s2["score"]))
+    time = datetime.datetime.now()
     i = genetic(g)
     f = open('out.csv', 'a')
-    f.write(str(c) + ',' +  str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(datetime.datetime.now() - time) + ',')
+    f.write(str(i[0]["fitness"]) + ',' + str(i[len(i) - 1]["fitness"]) + ',' + str(datetime.datetime.now() - time) + ',')
     time = datetime.datetime.now()
     i = sorted(i,key=lambda x:x["fitness"],reverse=True)
     t = woc(g, [t["heur"] for t in i[:5]])
