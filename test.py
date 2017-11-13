@@ -10,17 +10,20 @@ def genetic(g):
             heur["heur"].append(random.random())
         pop.append(heur)
     for i in pop:
-        i["fitness"] = solve(g,i["heur"])["score"]
+	i["solve"] = solve(g,i["heur"])
+        i["fitness"] = i["solve"]["score"]
     for i in range(100):
         pop = sorted(pop,key=lambda x:x["fitness"],reverse=True)
         x = random.randint(1,19)
         pop[x]["heur"] = mutate(pop[x]["heur"])
-        pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
+	pop[x]["solve"] = solve(g,pop[x]["heur"])
+        pop[x]["fitness"] = pop[x]["solve"]["score"]
         pop = sorted(pop,key=lambda x:x["fitness"],reverse=True)
         x = random.randint(1,19)
         y = random.randint(1,19)
         pop[x]["heur"] = breed(pop[y]["heur"],pop[0]["heur"])
-        pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
+	pop[x]["solve"] = solve(g,pop[x]["heur"])
+        pop[x]["fitness"] = pop[x]["solve"]["score"]
     return pop
 
 def mutate(h):
