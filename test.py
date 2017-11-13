@@ -18,8 +18,8 @@ def genetic(g):
         pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
         pop = sorted(pop,key=lambda x:x["fitness"],reverse=True)
         x = random.randint(1,19)
-        y = random.randint(0,19)
-        pop[x]["heur"] = breed(pop[y]["heur"],z["heur"])
+        y = random.randint(1,19)
+        pop[x]["heur"] = breed(pop[y]["heur"],pop[0]["heur"])
         pop[x]["fitness"] = solve(g,pop[x]["heur"])["score"]
     return pop
 
