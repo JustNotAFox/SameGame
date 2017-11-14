@@ -2,7 +2,6 @@ import time
 import datetime
 import tkinter as tk
 import GA
-
 from random import randint
 
 #########################################
@@ -18,42 +17,25 @@ g_height = 16
 g_width = 12
 
 # dictionary for colors and their numbers as keys
-color_values = {'1': 'Red', '2': 'Blue', '3': 'Green'}
-
-#########################################
-######                             ######
-######    Algorithm parameters:    ######
-######                             ######
-#########################################
-
-# probability that an individual will mutate
-k_mut_prob = 0.6
-
-# Number of generations to run for
-k_n_generations = 100
-
-# Population size of 1 generation (RoutePop)
-k_population_size = 100
+color_values = {'0': 'White', '1': 'Red', '2': 'Blue', '3': 'Green'}
 
 class App(tk.Tk):
     """
     Runs the application
     """
 
-    def __init__(self, n_generations, pop_size):
+    def __init__(self):
         '''
-        Initiates an App object to run for n_generations with a population of size pop_size
+        Initiates an App object to run
         '''
-        self.n_generations = n_generations
-        self.pop_size = pop_size
 
         # Initiates a window object & sets its title
         self.window = tk.Tk()
-        self.window.geometry('{}x{}'.format(425, 601))
+        self.window.geometry('{}x{}'.format(475, 500))
         self.window.wm_title("SameGame - Genetic Algorithm")
 
         # initiates a canvas for displaying the SameGame
-        self.canvas = tk.Canvas(self.window, height=325, width=451, highlightthickness=0, borderwidth=0)
+        self.canvas = tk.Canvas(self.window, height=400, width=451, highlightthickness=0, borderwidth=0)
 
         # Initiates a label
         self.canvas_title = tk.Label(self.window, text="SameGame")
@@ -101,8 +83,6 @@ class App(tk.Tk):
         self.average_score = 0
         self.move_num = 0
 
-        self.draw_SameGame()
-
     def GA_loop(self):
         self.s = GA.solve(self.g,[1,0,1,0,0])
         print("Next move will be: ", self.s["moves"][self.move_num])
@@ -110,11 +90,8 @@ class App(tk.Tk):
     def next_move(self):
         print("Performing move: ", self.s["moves"][self.move_num])
         self.best_score += (len(self.s["moves"][self.move_num]) - 1) ** 2
-        print("cells to delete: ", len(self.s["moves"][self.move_num]))
-        for j in range(self.move_num, len(self.s["moves"][self.move_num])):
-            (x, y) = (self.s["moves"][self.move_num][j])
-            self.delete_cell(x, y)
-        self.update_canvas()
+        self.g = GA.postMove(self.g, self.s["moves"][self.move_num])
+        self.draw_SameGame(self.g)
         self.best_tk_txt.set("Best Score: " + str(self.best_score))
         self.move_num += 1
         print("Next move will be: ", self.s["moves"][self.move_num])
@@ -124,30 +101,7 @@ class App(tk.Tk):
         value = self.g[row, column]
         return value
 
-    def none_below(self, row, column):
-        # Returns true if there are no cells below the input cell
-        if (row-1) >= 0 and self.grid[row-1, column] is None:
-            return True
-        else:
-            return False
-
-    def column_isEmpty(self, column):
-        # Returns true if input column is empty
-        for row in range(g_height):
-            if self.g[row, column] is None:
-                print("empty column is ", column)
-                return True
-            else:
-                return False
-
-    def delete_cell(self, row, column):
-        # Delete a cell, will delete both colored rectangle and the text/number associated
-        self.canvas.delete(self.canvas.find_withtag(self.rect[row, column]))
-        self.canvas.delete(self.canvas.find_withtag(self.grid[row, column]))
-        self.rect[row, column] = None
-        self.grid[row, column] = None
-
-    def draw_SameGame(self):
+    def draw_SameGame(self, board):
         # Clears the canvas of previous elements
         self.canvas.delete("all")
 
@@ -158,91 +112,25 @@ class App(tk.Tk):
                 y1 = row * self.cellheight
                 x2 = x1 + self.cellwidth
                 y2 = y1 + self.cellheight
-                textNum = randint(1, 3)
+                textNum = board[row, column]
                 cellColor = color_values[str(textNum)]
                 self.g[row, column] = textNum
                 self.rect[row, column] = self.canvas.create_rectangle(y1, x1, y2, x2, fill=cellColor, tags=(row, column))
                 self.grid[row, column] = self.canvas.create_text(y1 + self.textoffset, x1 + self.textoffset, fill="black", text=textNum,tags = textNum)
-
-        #Uncomment to test column collapse
-        # for row in range(0, g_height):
-        #     self.delete_cell(row, 5)
-        #     self.delete_cell(row, 6)
-        #     self.delete_cell(row, 7)
-
-        #Uncomment to test cell drops
-        # self.delete_cell(3, 5)
-        # self.delete_cell(2, 5)
-        # self.delete_cell(1, 5)
-        # self.delete_cell(10, 10)
-        # self.delete_cell(5, 15)
-
-
-    def drop_cells(self):
-        # Drops cells down if there are empty spaces
-        for column in range(g_width):
-            for row in range(g_height):
-                while(self.none_below(row, column) and self.grid[row,column] is not None):
-                    x1 = (column) * self.cellwidth
-                    y1 = (self.rows - row) * self.cellheight
-                    x2 = x1 + self.cellwidth
-                    y2 = y1 + (self.cellheight)
-                    textNum = self.get_cellValue(row, column)
-                    cellColor = color_values[str(textNum)]
-                    self.rect[row-1, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
-                    self.grid[row-1, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
-                    self.g[row-1, column] = textNum
-                    self.delete_cell(row, column)
-                    break
-
-    def collapse_columns(self):
-        # Finds the empty column
-        empty_columns = []
-        for column in range(g_width):
-            if self.column_isEmpty(column):
-                empty_columns.append(column)
-        if not empty_columns:
-            return
-
-        # Shifts the other columns
-        for column in range(empty_columns.pop() + 1, g_width):
-            for row in range(g_height):
-                x1 = (column - len(empty_columns) - 1) * self.cellwidth
-                y1 = (self.rows - row - 1) * self.cellheight
-                x2 = x1 + self.cellwidth
-                y2 = y1 + self.cellheight
-                textNum = self.get_cellValue(row, column)
-                cellColor = color_values[str(textNum)]
-                self.rect[row, column - 1] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
-                self.grid[row, column - 1] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
-                self.g[row, column - 1] = textNum
-                self.delete_cell(row, column)
-
-    def update_canvas(self):
-        '''
-        Convenience method to update the canvases after a move is performed
-        '''
-        # Shifts columns over if a column is empty
-        self.collapse_columns()
-
-        # Iterate through board and drop cells if any of them need to be dropped
-        for column in range(g_width):
-            for row in range(g_height):
-                self.drop_cells()
 
     def window_loop(self):
         '''
         Used to wraps the GA_loop() method and initiates the window on top of the logic.
         window.mainloop() hogs the Thread, that's why the GA_loop needs to be called as a callback
         '''
-
+        board = GA.genBoard(1, 1)
+        app.draw_SameGame(board)
         self.window.mainloop()
 
 if __name__ == '__main__':
     try:
         start_time = time.time()
-        app = App(n_generations=k_n_generations, pop_size=k_population_size)
+        app = App()
         app.window_loop()
-
     except Exception as e:
         print("\n[ERROR]: %s\n" % e)
