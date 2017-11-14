@@ -84,7 +84,7 @@ class App(tk.Tk):
         self.move_num = 0
 
     def GA_loop(self):
-        self.s = GA.solve(self.g,[1,0,1,0,0])
+        self.s = GA.genetic(self.g)[0]["solve"]
         print("Next move will be: ", self.s["moves"][self.move_num])
 
     def next_move(self):
