@@ -53,7 +53,7 @@ class App(tk.Tk):
         self.window.wm_title("SameGame - Genetic Algorithm")
 
         # initiates a canvas for displaying the SameGame
-        self.canvas = tk.Canvas(self.window, height=451, width=325, highlightthickness=0, borderwidth=0)
+        self.canvas = tk.Canvas(self.window, height=325, width=451, highlightthickness=0, borderwidth=0)
 
         # Initiates a label
         self.canvas_title = tk.Label(self.window, text="SameGame")
@@ -154,15 +154,15 @@ class App(tk.Tk):
         # Draws the board
         for column in range(g_width):
             for row in range(g_height):
-                x1 = column * self.cellwidth
-                y1 = (self.rows - row - 1) * self.cellheight
+                x1 = (self.columns - column - 1) * self.cellwidth
+                y1 = row * self.cellheight
                 x2 = x1 + self.cellwidth
                 y2 = y1 + self.cellheight
                 textNum = randint(1, 3)
                 cellColor = color_values[str(textNum)]
                 self.g[row, column] = textNum
-                self.rect[row, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
-                self.grid[row, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum,tags = textNum)
+                self.rect[row, column] = self.canvas.create_rectangle(y1, x1, y2, x2, fill=cellColor, tags=(row, column))
+                self.grid[row, column] = self.canvas.create_text(y1 + self.textoffset, x1 + self.textoffset, fill="black", text=textNum,tags = textNum)
 
         #Uncomment to test column collapse
         # for row in range(0, g_height):
