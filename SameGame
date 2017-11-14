@@ -1,4 +1,5 @@
 import time
+import datetime
 import tkinter as tk
 import GA
 
@@ -11,10 +12,10 @@ from random import randint
 #########################################
 
 # Number of Rows
-g_height = 12
+g_height = 16
 
 # Number of Columns
-g_width = 16
+g_width = 12
 
 # dictionary for colors and their numbers as keys
 color_values = {'1': 'Red', '2': 'Blue', '3': 'Green'}
@@ -48,11 +49,11 @@ class App(tk.Tk):
 
         # Initiates a window object & sets its title
         self.window = tk.Tk()
-        self.window.geometry('{}x{}'.format(500, 450))
+        self.window.geometry('{}x{}'.format(425, 601))
         self.window.wm_title("SameGame - Genetic Algorithm")
 
         # initiates a canvas for displaying the SameGame
-        self.canvas = tk.Canvas(self.window, height=301, width=401, highlightthickness=0, borderwidth=0)
+        self.canvas = tk.Canvas(self.window, height=451, width=325, highlightthickness=0, borderwidth=0)
 
         # Initiates a label
         self.canvas_title = tk.Label(self.window, text="SameGame")
@@ -73,7 +74,8 @@ class App(tk.Tk):
         self.start_btn.pack(side=tk.BOTTOM)
         self.generate_btn = tk.Button(self.window, text="Generate New", command=lambda: self.draw_SameGame())
         self.generate_btn.pack(side=tk.BOTTOM)
-
+        self.next_btn = tk.Button(self.window, text="Next", command=lambda: self.next_move())
+        self.next_btn.pack(side=tk.BOTTOM)
         # Packs all the widgets (physically creates them and places them in order)
 
         self.canvas_title.pack()
@@ -92,21 +94,39 @@ class App(tk.Tk):
         #Initialize dictionaries for cell rectangles and numbers
         self.rect = {}
         self.grid = {}
+        self.g = {}
+        self.s = {}
+        self.best_score = 0
+        self.worst_score = 0
+        self.average_score = 0
+        self.move_num = 0
 
         self.draw_SameGame()
 
     def GA_loop(self):
-        g = GA.genBoard(1, 1)
-        print(g)
+        self.s = GA.solve(self.g,[1,0,1,0,0])
+        print("Next move will be: ", self.s["moves"][self.move_num])
+
+    def next_move(self):
+        print("Performing move: ", self.s["moves"][self.move_num])
+        self.best_score += (len(self.s["moves"][self.move_num]) - 1) ** 2
+        print("cells to delete: ", len(self.s["moves"][self.move_num]))
+        for j in range(self.move_num, len(self.s["moves"][self.move_num])):
+            (x, y) = (self.s["moves"][self.move_num][j])
+            self.delete_cell(x, y)
+        self.update_canvas()
+        self.best_tk_txt.set("Best Score: " + str(self.best_score))
+        self.move_num += 1
+        print("Next move will be: ", self.s["moves"][self.move_num])
 
     def get_cellValue(self, row, column):
         # Get the value associated with a cell and return it
-        value = self.canvas.itemcget(self.grid[row, column], 'text')
+        value = self.g[row, column]
         return value
 
     def none_below(self, row, column):
         # Returns true if there are no cells below the input cell
-        if (row - 1) >= 0 and self.grid[row-1, column] is None:
+        if (row-1) >= 0 and self.grid[row-1, column] is None:
             return True
         else:
             return False
@@ -114,7 +134,8 @@ class App(tk.Tk):
     def column_isEmpty(self, column):
         # Returns true if input column is empty
         for row in range(g_height):
-            if self.grid[row, column] is None:
+            if self.g[row, column] is None:
+                print("empty column is ", column)
                 return True
             else:
                 return False
@@ -139,6 +160,7 @@ class App(tk.Tk):
                 y2 = y1 + self.cellheight
                 textNum = randint(1, 3)
                 cellColor = color_values[str(textNum)]
+                self.g[row, column] = textNum
                 self.rect[row, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
                 self.grid[row, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum,tags = textNum)
 
@@ -161,7 +183,6 @@ class App(tk.Tk):
         for column in range(g_width):
             for row in range(g_height):
                 while(self.none_below(row, column) and self.grid[row,column] is not None):
-                    print(row, column)
                     x1 = (column) * self.cellwidth
                     y1 = (self.rows - row) * self.cellheight
                     x2 = x1 + self.cellwidth
@@ -170,6 +191,7 @@ class App(tk.Tk):
                     cellColor = color_values[str(textNum)]
                     self.rect[row-1, column] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
                     self.grid[row-1, column] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
+                    self.g[row-1, column] = textNum
                     self.delete_cell(row, column)
                     break
 
@@ -179,7 +201,7 @@ class App(tk.Tk):
         for column in range(g_width):
             if self.column_isEmpty(column):
                 empty_columns.append(column)
-        if empty_columns is None:
+        if not empty_columns:
             return
 
         # Shifts the other columns
@@ -191,10 +213,9 @@ class App(tk.Tk):
                 y2 = y1 + self.cellheight
                 textNum = self.get_cellValue(row, column)
                 cellColor = color_values[str(textNum)]
-                self.rect[row, column - 1] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor,
-                                                                          tags=(row, column))
-                self.grid[row, column - 1] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset,
-                                                                     fill="black", text=textNum, tags=textNum)
+                self.rect[row, column - 1] = self.canvas.create_rectangle(x1, y1, x2, y2, fill=cellColor, tags=(row, column))
+                self.grid[row, column - 1] = self.canvas.create_text(x1 + self.textoffset, y1 + self.textoffset, fill="black", text=textNum, tags=textNum)
+                self.g[row, column - 1] = textNum
                 self.delete_cell(row, column)
 
     def update_canvas(self):
@@ -208,8 +229,6 @@ class App(tk.Tk):
         for column in range(g_width):
             for row in range(g_height):
                 self.drop_cells()
-
-
 
     def window_loop(self):
         '''
